@@ -280,7 +280,7 @@ class Alimama:
     def get_detail(self, q):
         try:
             t = int(time.time() * 1000)
-            tb_token = self.se.cookies.get('_tb_token_', domain="pub.alimama.com")
+            tb_token = self.se.cookies.get('_tb_token_')
             pvid = '10_%s_1686_%s' % (self.myip, t)
             url = 'http://pub.alimama.com/items/search.json?q=%s&_t=%s&auctionTag=&perPageSize=40&shopTag=&t=%s&_tb_token_=%s&pvid=%s' % (
                 urllib.quote(q.encode('utf8')), t, t, tb_token, pvid)
@@ -310,7 +310,7 @@ class Alimama:
     # 获取淘宝客链接
     def get_tk_link(self, auctionid):
         t = int(time.time() * 1000)
-        tb_token = self.se.cookies.get('_tb_token_', domain="pub.alimama.com")
+        tb_token = self.se.cookies.get('_tb_token_')
         pvid = '10_%s_1686_%s' % (self.myip, t)
         try:
             gcid, siteid, adzoneid = self.__get_tk_link_s1(auctionid, tb_token, pvid)
