@@ -47,7 +47,7 @@ def check_if_is_tb_link(msg):
                     taokouling = re.search(r'￥.*?￥', msg.text).group()
             elif u'👉淘♂寳♀👈' in msg.text:
                 try:
-                    url = re.search(r'http://.* \)', msg.text).group().replace(u' )', '')
+                    url = re.search(r'https://.* ', msg.text).group()
                 except:
                     url = None
                     taokouling = re.search(r'€.*?€', msg.text).group()
@@ -151,8 +151,8 @@ class WxBot(object):
     def run(self):
         sysstr = platform.system()
         if (sysstr == "Linux") or (sysstr == "Darwin"):
-            # itchat.auto_login(enableCmdQR=2, hotReload=True)
-            itchat.auto_login(hotReload=True)
+            itchat.auto_login(enableCmdQR=2, hotReload=True)
+            #itchat.auto_login(hotReload=True)
         else:
             itchat.auto_login(hotReload=True)
         itchat.run(True)

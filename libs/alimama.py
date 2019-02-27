@@ -17,6 +17,11 @@ import re
 import sys
 import time
 import traceback
+import sys  
+
+reload(sys)
+
+sys.setdefaultencoding('utf8')
 
 if sys.version_info[0] < 3:
     import urllib
@@ -92,6 +97,7 @@ class Alimama:
         # 设置cookie
         with open("cookies_taobao.txt", 'r') as fh:
             con = fh.read()
+            con = con.replace("\n", "")
             for c in con.split(";"):
                 self.se.cookies.set(c.split('=')[0], c.split('=')[1])
         # if os.path.isfile(cookie_fname):
@@ -292,6 +298,7 @@ class Alimama:
             }
             res = self.get_url(url, headers)
             rj = res.json()
+	    self.logger.debug("get_detail url: {} , res: {}".format(url,rj))
             if len(rj['data']['pageList']) > 0:
                 return rj['data']['pageList'][0]
             else:
@@ -328,11 +335,12 @@ class Alimama:
             'Accept-Language': 'zh,en-US;q=0.8,en;q=0.6,zh-CN;q=0.4,zh-TW;q=0.2',
         }
         res = self.get_url(url, headers)
+	self.logger.debug(url)
         self.logger.debug(res.text)
         rj = res.json()
         gcid = rj['data']['otherList'][0]['gcid']
         siteid = rj['data']['otherList'][0]['siteid']
-        adzoneid = rj['data']['otherAdzones'][0]['sub'][0]['id']
+        adzoneid = rj['data']['otherAdzones'][0]['id']
         return gcid, siteid, adzoneid
 
     # post数据
@@ -385,7 +393,7 @@ class Alimama:
         # return "https://detail.tmall.com/item.htm?id=548726815314"
         try:
             headers = {
-                'Host': url.split('http://')[-1].split('/')[0],
+                'Host': url.split('https://')[-1].split('/')[0],
                 'Upgrade-Insecure-Requests': '1',
                 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -394,9 +402,9 @@ class Alimama:
             }
             res = self.get_url(url, headers)
             if re.search(r'itemId\":\d+', res.text):
-                item_id = re.search(r'itemId\":\d+', res.text).group().replace('itemId":', '').replace('https://',
-                                                                                                       'http://')
+                item_id = re.search(r'itemId:\"\d+', res.text).group().replace('itemId:"', '')
                 r_url = "https://detail.tmall.com/item.htm?id=%s" % item_id
+		return r_url
             elif re.search(r"var url = '.*';", res.text):
                 r_url = re.search(r"var url = '.*';", res.text).group().replace("var url = '", "").replace("';",
                                                                                                            "").replace(
@@ -409,7 +417,7 @@ class Alimama:
                 while ('detail.tmall.com' not in r_url) and ('item.taobao.com' not in r_url) and (
                             'detail.m.tmall.com' not in r_url):
                     headers1 = {
-                        'Host': r_url.split('http://')[-1].split('/')[0],
+                        'Host': r_url.split('https://')[-1].split('/')[0],
                         'Upgrade-Insecure-Requests': '1',
                         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -417,8 +425,20 @@ class Alimama:
                         'Accept-Language': 'zh,en-US;q=0.8,en;q=0.6,zh-CN;q=0.4,zh-TW;q=0.2',
                     }
                     res2 = self.get_url(r_url, headers1)
-                    self.logger.debug("{},{},{}".format(res2.url, res2.status_code, res2.history))
-                    r_url = res2.url
+ 		    if re.search(r'itemId\":\d+', res2.text):
+                	item_id = re.search(r'itemId:\"\d+', res.text).group().replace('itemId:"', '')
+                	r_url = "https://detail.tmall.com/item.htm?id=%s" % item_id
+                	return r_url
+            	    elif re.search(r"var url = '.*';", res2.text):
+                	r_url = re.search(r"var url = '.*';", res2.text).group().replace("var url = '", "").replace("';","").replace('https://', 'http://')
+            	    elif re.search(r"i\d+", r_url):
+			item_id = re.search(r"i\d+", r_url).group().replace("i","")
+			r_url = "https://detail.tmall.com/item.htm?id=%s" % item_id
+			return r_url
+		    else:
+                        r_url = res2.url
+                    self.logger.debug("{},{},{},{}".format(res2.url, res2.status_code, res2.history, res2.text))
+		    return r_url
 
             self.logger.debug(r_url)
             return r_url
